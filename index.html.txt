@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#24231f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="100 дней">
+<title>100 дней</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{
+  --bg:#f6f3ee;--card:#fffdf9;--ink:#24231f;--muted:#817d74;
+  --accent:#6b5ce7;--accent2:#eeeaff;--line:#e7e1d8;--ok:#4f9d69;
+  --star:#f5b301;--star-empty:#d9d2c7;--gold:#c99b2e;--gold-bg:#fff6dd;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink)}
+.app{max-width:480px;margin:auto;min-height:100vh;padding:18px 16px 28px}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.brand{font-weight:800;font-size:21px}
+.menu{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:9px 12px;cursor:pointer}
+.hero{background:var(--ink);color:white;border-radius:24px;padding:22px;margin-bottom:14px}
+.small{font-size:13px;color:#bcb8b0}
+.day{font-size:42px;font-weight:800;line-height:1;margin:8px 0}
+.remain{font-size:14px;color:#d2cec6}
+.bar{height:8px;background:#55514b;border-radius:8px;overflow:hidden;margin-top:18px}
+.fill{height:100%;background:#fff;width:0%;transition:width .3s}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:17px;margin-bottom:14px}
+.card h2{font-size:17px;margin:0 0 12px}
+.task{display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.task:last-child{border-bottom:0}
+.check{width:26px;height:26px;border:2px solid #cfc8bd;border-radius:8px;background:white;display:grid;place-items:center;cursor:pointer;flex:0 0 auto}
+.check.done{background:var(--ok);border-color:var(--ok);color:white}
+.task .name{flex:1;min-width:90px}
+.tag{font-size:11px;color:var(--muted)}
+.stars{display:flex;gap:2px;cursor:pointer}
+.star{font-size:22px;line-height:1;color:var(--star-empty);transition:transform .1s}
+.star.on{color:var(--star)}
+.star:active{transform:scale(1.2)}
+.scoreline{display:flex;justify-content:space-between;align-items:center}
+.score{font-size:14px;color:var(--muted)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat{background:#f1eee8;border-radius:14px;padding:12px}
+.stat b{display:block;font-size:20px}
+.stat small{color:var(--muted)}
+.ai{background:var(--accent2);border:0}
+.ai-title{font-weight:800;margin-bottom:8px}
+.ai p{margin:0;line-height:1.45;font-size:14px}
+
+/* Копилка */
+.piggy{background:linear-gradient(135deg,#fff6dd,#ffe9b8);border:1px solid #f0d98a}
+.piggy h2{display:flex;align-items:center;gap:8px}
+.piggy .total{font-size:32px;font-weight:800;color:var(--gold);line-height:1.1;margin:6px 0 2px}
+.piggy .sub{font-size:12px;color:#8a6d2a;margin-bottom:12px}
+.piggyRow{display:flex;gap:8px;align-items:center}
+.piggyRow input{flex:1;border:1px solid #e3cf8f;border-radius:12px;padding:11px;font:inherit;background:white;min-width:0}
+.piggyRow button{border:0;border-radius:12px;padding:11px 14px;background:var(--gold);color:white;font-weight:700;cursor:pointer}
+.piggyHint{font-size:11px;color:#8a6d2a;margin-top:8px}
+.piggyList{margin-top:10px;font-size:13px;color:#6f5720;line-height:1.6;max-height:140px;overflow:auto}
+.piggyList div{display:flex;justify-content:space-between;border-bottom:1px dashed #e3cf8f;padding:3px 0}
+.piggyList div:last-child{border-bottom:0}
+
+button.primary{width:100%;border:0;border-radius:14px;padding:13px;background:var(--accent);color:white;font-weight:700;font-size:15px;cursor:pointer;margin-bottom:8px}
+button.secondary{width:100%;border:1px solid var(--line);border-radius:14px;padding:13px;background:var(--card);color:var(--ink);font-weight:700;font-size:15px;cursor:pointer;margin-bottom:8px}
+button.danger{width:100%;border:1px solid #e0b4b4;border-radius:14px;padding:11px;background:#fff5f5;color:#b34040;font-weight:600;font-size:14px;cursor:pointer;margin-bottom:8px}
+footer{text-align:center;color:var(--muted);font-size:11px;padding:8px}
+.dataBtns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.dataBtns button{margin-bottom:0}
+.hint{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.4}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="brand">100 дней</div>
+  <button class="menu" onclick="resetDay()" title="Сбросить день">↻</button>
+</header>
+
+<section class="hero">
+  <div class="small">ТВОЙ ЧЕЛЛЕНДЖ</div>
+  <div class="day">День <span id="day">1</span><span style="font-size:24px"> / 100</span></div>
+  <div class="remain">Осталось <b id="left">99</b> дней</div>
+  <div class="bar"><div class="fill" id="progress"></div></div>
+</section>
+
+<section class="card">
+  <h2>Сегодня</h2>
+  <div id="tasks"></div>
+</section>
+
+<section class="card piggy">
+  <h2>🐷 Копилка</h2>
+  <div class="total" id="piggyTotal">0 ₽</div>
+  <div class="sub">итог за все дни челленджа</div>
+  <div class="piggyRow">
+    <input type="number" id="piggyInput" placeholder="Сумма за сегодня" min="0" step="1" inputmode="numeric">
+    <button onclick="addPiggy()">+ Добавить</button>
+  </div>
+  <div class="piggyHint">Введите сумму за сегодня и нажмите «Добавить». Значение за текущий день можно перезаписать, введя новое.</div>
+  <div class="piggyList" id="piggyList"></div>
+</section>
+
+<section class="card">
+  <div class="scoreline">
+    <h2 style="margin:0">Эффективность дня</h2>
+    <span class="score" id="dayScore">0 / 100</span>
+  </div>
+  <div class="stars" id="dayStars" style="margin-top:8px"></div>
+  <textarea class="note" id="note" rows="2" placeholder="Коротко: что помогло или помешало?" style="width:100%;border:1px solid var(--line);border-radius:12px;padding:11px;margin-top:10px;background:white;font:inherit;resize:none"></textarea>
+</section>
+
+<section class="card">
+  <h2>Статистика</h2>
+  <div class="stats">
+    <div class="stat"><b id="avg7">—</b><small>средняя за 7 дней</small></div>
+    <div class="stat"><b id="avg30">—</b><small>средняя за 30 дней</small></div>
+    <div class="stat"><b id="avgAll">—</b><small>средняя за всё время</small></div>
+    <div class="stat"><b id="streak">0 🔥</b><small>серия дней</small></div>
+  </div>
+</section>
+
+<section class="card ai">
+  <div class="ai-title">🤖 Анализ</div>
+  <p id="aiText">Заполни день, чтобы увидеть анализ.</p>
+</section>
+
+<button class="primary" onclick="finishDay()">Сохранить день</button>
+<button class="secondary" onclick="nextDay()">Следующий день →</button>
+
+<section class="card">
+  <h2>Резервная копия</h2>
+  <div class="dataBtns">
+    <button class="secondary" onclick="exportJSON()">⬇ Экспорт</button>
+    <button class="secondary" onclick="document.getElementById('importFile').click()">⬆ Импорт</button>
+  </div>
+  <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importJSON(event)">
+  <div class="hint">Экспорт сохранит файл <b>100days-backup.json</b> — его можно переслать себе и загрузить на другом телефоне через «Импорт».</div>
+  <button class="danger" onclick="wipeAll()" style="margin-top:10px">Удалить все данные</button>
+</section>
+
+<footer>100 дней • данные сохраняются в этом браузере</footer>
+</div>
+
+<script>
+const ACTIONS = ["Спорт","Питание","Чтение перед сном","Английский","Копилка"];
+const TAGS = ["1 час","план","1 час","15 мин","сумма"];
+const KEY = "100days_v1";
+
+let state = load();
+
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(raw){
+      const s = JSON.parse(raw);
+      // миграция: если действий было 5 и они старые — оставим совместимость
+      return s;
+    }
+  }catch(e){}
+  return { startDate: todayStr(), currentDay: 1, days: {} };
+}
+function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+
+function getDay(n){
+  if(!state.days[n]) state.days[n] = { marks: ACTIONS.map(()=>0), note:"", done:false, piggy:0 };
+  if(typeof state.days[n].piggy !== "number") state.days[n].piggy = 0;
+  return state.days[n];
+}
+
+function render(){
+  const day = state.currentDay;
+  const d = getDay(day);
+  document.getElementById("day").textContent = day;
+  document.getElementById("left").textContent = Math.max(0, 100 - day);
+  document.getElementById("progress").style.width = (day/100*100) + "%";
+  document.getElementById("note").value = d.note || "";
+
+  /* Задания */
+  const box = document.getElementById("tasks");
+  box.innerHTML = "";
+  ACTIONS.forEach((name, i)=>{
+    const row = document.createElement("div");
+    row.className = "task";
+
+    const check = document.createElement("button");
+    check.className = "check" + (d.marks[i] > 0 ? " done" : "");
+    check.textContent = d.marks[i] > 0 ? "✓" : "";
+    check.onclick = ()=>{ d.marks[i] = d.marks[i] > 0 ? 0 : 5; save(); render(); };
+
+    const span = document.createElement("span");
+    span.className = "name"; span.textContent = name;
+
+    const tag = document.createElement("span");
+    tag.className = "tag"; tag.textContent = TAGS[i];
+
+    const stars = document.createElement("div");
+    stars.className = "stars";
+    for(let s=1; s<=5; s++){
+      const st = document.createElement("span");
+      st.className = "star" + (d.marks[i] >= s ? " on" : "");
+      st.textContent = "★";
+      st.onclick = (e)=>{ e.stopPropagation(); d.marks[i] = s; save(); render(); };
+      stars.appendChild(st);
+    }
+
+    row.append(check, span, tag, stars);
+    box.appendChild(row);
+  });
+
+  /* Эффективность дня */
+  const total = d.marks.reduce((a,b)=>a+b,0);
+  const percent = Math.round(total / 25 * 100);
+  document.getElementById("dayScore").textContent = percent + " / 100";
+
+  const dayStars = document.getElementById("dayStars");
+  dayStars.innerHTML = "";
+  const avgStars = Math.round(percent / 20);
+  for(let s=1; s<=5; s++){
+    const st = document.createElement("span");
+    st.className = "star" + (avgStars >= s ? " on" : "");
+    st.style.fontSize = "28px";
+    st.textContent = "★";
+    st.onclick = ()=>{
+      const val = s * 20;
+      const base = Math.floor(val/5);
+      d.marks = d.marks.map(()=>base);
+      let rest = val - base*5;
+      for(let i=0; i<d.marks.length && rest>0; i++){ d.marks[i]++; rest--; }
+      save(); render();
+    };
+    dayStars.appendChild(st);
+  }
+
+  /* Копилка */
+  renderPiggy();
+
+  /* Статистика */
+  document.getElementById("avg7").textContent = avgPercent(7) + "%";
+  document.getElementById("avg30").textContent = avgPercent(30) + "%";
+  document.getElementById("avgAll").textContent = avgPercent(1000) + "%";
+  document.getElementById("streak").textContent = calcStreak() + " 🔥";
+  document.getElementById("aiText").textContent = buildAiText();
+}
+
+/* ---------- КОПИЛКА ---------- */
+function renderPiggy(){
+  let total = 0;
+  const rows = [];
+  for(let i=1; i<=100; i++){
+    const d = state.days[i];
+    if(d && d.piggy > 0){
+      total += d.piggy;
+      rows.push({day:i, sum:d.piggy});
+    }
+  }
+  document.getElementById("piggyTotal").textContent = fmt(total) + " ₽";
+
+  const list = document.getElementById("piggyList");
+  list.innerHTML = "";
+  if(rows.length === 0){
+    list.innerHTML = '<div style="border:0;opacity:.7">Пока пусто — начни с первой суммы.</div>';
+  }else{
+    // последние 10 записей сверху
+    rows.slice(-10).reverse().forEach(r=>{
+      const el = document.createElement("div");
+      el.innerHTML = `<span>День ${r.day}</span><b>${fmt(r.sum)} ₽</b>`;
+      list.appendChild(el);
+    });
+  }
+  const inp = document.getElementById("piggyInput");
+  const cur = getDay(state.currentDay).piggy;
+  inp.value = cur > 0 ? cur : "";
+}
+
+function addPiggy(){
+  const inp = document.getElementById("piggyInput");
+  const val = Math.max(0, Math.floor(Number(inp.value) || 0));
+  const d = getDay(state.currentDay);
+  d.piggy = val;
+  save();
+  renderPiggy();
+}
+
+function fmt(n){ return n.toLocaleString("ru-RU"); }
+
+/* ---------- СТАТИСТИКА ---------- */
+function avgPercent(n){
+  let sum=0, cnt=0;
+  for(let i=1; i<=Math.min(n, state.currentDay); i++){
+    const d = state.days[i];
+    if(d && d.marks){
+      sum += d.marks.reduce((a,b)=>a+b,0)/25*100;
+      cnt++;
+    }
+  }
+  return cnt ? Math.round(sum/cnt) : 0;
+}
+
+function calcStreak(){
+  let s=0;
+  for(let i=state.currentDay; i>=1; i--){
+    const d = state.days[i];
+    if(d && d.marks && d.marks.some(x=>x>0)) s++;
+    else break;
+  }
+  return s;
+}
+
+function buildAiText(){
+  const a7 = avgPercent(7), a30 = avgPercent(30);
+  if(state.currentDay < 3) return "Пока мало данных. Отмечай выполнение и ставь звёзды — через несколько дней появится анализ.";
+  const weakest = weakestAction();
+  return `Средняя эффективность за 7 дней — ${a7}%, за 30 дней — ${a30}%. `
+       + (weakest ? `Чаще всего проседает «${weakest}». Попробуй сделать это действие минимальным: 5–10 минут или одно конкретное действие в день.` : "");
+}
+
+function weakestAction(){
+  const sums = ACTIONS.map(()=>0), cnts = ACTIONS.map(()=>0);
+  for(let i=1; i<=state.currentDay; i++){
+    const d = state.days[i];
+    if(!d || !d.marks) continue;
+    d.marks.forEach((m,idx)=>{ sums[idx]+=m; cnts[idx]++; });
+  }
+  let min=Infinity, idx=-1;
+  sums.forEach((s,i)=>{ if(cnts[i]){ const a=s/cnts[i]; if(a<min){min=a; idx=i;} } });
+  return idx>=0 ? ACTIONS[idx] : null;
+}
+
+/* ---------- СОХРАНЕНИЕ / НАВИГАЦИЯ ---------- */
+function finishDay(){
+  const d = getDay(state.currentDay);
+  d.note = document.getElementById("note").value.trim();
+  d.done = true;
+  d.date = todayStr();
+  save();
+  const percent = Math.round(d.marks.reduce((a,b)=>a+b,0)/25*100);
+  alert("День " + state.currentDay + " сохранён: " + percent + "%");
+}
+
+function nextDay(){
+  finishDay();
+  if(state.currentDay < 100){
+    state.currentDay++;
+    save();
+    render();
+    window.scrollTo({top:0, behavior:"smooth"});
+  } else {
+    alert("Поздравляю! 100 дней завершены 🎉");
+  }
+}
+
+function resetDay(){
+  if(confirm("Сбросить отметки сегодняшнего дня?")){
+    state.days[state.currentDay] = { marks: ACTIONS.map(()=>0), note:"", done:false, piggy:0 };
+    save(); render();
+  }
+}
+
+/* ---------- ЭКСПОРТ / ИМПОРТ ---------- */
+function exportJSON(){
+  const data = {
+    app: "100days",
+    version: 2,
+    exportedAt: new Date().toISOString(),
+    state: state
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const stamp = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = "100days-backup-" + stamp + ".json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importJSON(ev){
+  const file = ev.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    try{
+      const parsed = JSON.parse(e.target.result);
+      const incoming = parsed.state ? parsed.state : parsed;
+      if(!incoming.days || typeof incoming.currentDay !== "number"){
+        throw new Error("Неверный формат файла");
+      }
+      if(!confirm("Импорт заменит текущий прогресс. Продолжить?")) return;
+      state = {
+        startDate: incoming.startDate || todayStr(),
+        currentDay: Math.min(100, Math.max(1, incoming.currentDay)),
+        days: incoming.days || {}
+      };
+      save(); render();
+      alert("Импорт выполнен успешно ✅");
+    }catch(err){
+      alert("Не удалось прочитать файл: " + err.message);
+    }finally{
+      ev.target.value = "";
+    }
+  };
+  reader.readAsText(file);
+}
+
+function wipeAll(){
+  if(confirm("Удалить весь прогресс безвозвратно?")){
+    localStorage.removeItem(KEY);
+    state = { startDate: todayStr(), currentDay: 1, days: {} };
+    save(); render();
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+}
+
+render();
+
+/* ---------- SERVICE WORKER ---------- */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("service-worker.js")
+      .then(() => console.log("SW зарегистрирован"))
+      .catch(err => console.log("SW ошибка:", err));
+  });
+}
+</script>
+</body>
+</html>
